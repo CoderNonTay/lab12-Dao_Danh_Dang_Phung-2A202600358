@@ -249,14 +249,28 @@ Kết luận:
 
 ---
 
-### Exercise 3.2: Render deployment (phần đọc cấu hình + so sánh)
+### Exercise 3.2: Render deployment (thực tế gặp lỗi)
 
-Đã đọc `03-cloud-deployment/render/render.yaml`, các điểm chính:
+Đã thực hiện deploy bằng Render Blueprint, tạo thành công resources:
+- `ai-agent` (web service)
+- `agent-cache` (redis)
+
+Thông tin cấu hình chính từ `render.yaml`:
 - Deploy theo mô hình **Blueprint (Infrastructure as Code)**.
 - `buildCommand`: `pip install -r requirements.txt`
 - `startCommand`: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 - `healthCheckPath`: `/health`
 - Secrets (`OPENAI_API_KEY`, `AGENT_API_KEY`) quản lý qua Render Dashboard.
+
+Kết quả thực tế:
+- Build có lúc pass, nhưng deploy web service chưa thành công ổn định.
+- Lỗi chính quan sát được trong logs:
+  - `Could not open requirements file: requirements.txt` (sai root directory)
+  - `Error loading ASGI app. Could not import module "app"` (module path/runtime không khớp)
+
+Kết luận:
+- Phần Render đã triển khai đến mức tạo Blueprint + resources và phân tích được lỗi từ logs.
+- Railway deployment vẫn thành công đầy đủ và đáp ứng checkpoint “deploy ít nhất 1 platform”.
 
 ---
 
@@ -390,3 +404,98 @@ Nhận xét:
 - [x] Hiểu và test JWT flow.
 - [x] Test rate limiting (429 sau khi vượt ngưỡng).
 - [x] Xác minh cost guard qua usage/cost tracking.
+
+## Part 5: Scaling & Reliability
+
+### Exercise 5.1: Health checks (develop)
+
+Thư mục thực hiện: `05-scaling-reliability/develop`
+
+Kết quả:
+- `GET /health` trả `200 OK`
+- `GET /ready` trả `200 OK`
+
+Response mẫu:
+```json
+{"status":"ok", ...}
+{"ready":true,"in_flight_requests":1}
+```
+
+Nhận xét:
+- Liveness và readiness endpoint hoạt động đúng.
+
+---
+
+### Exercise 5.2: Graceful shutdown (develop)
+
+Kết quả log khi dừng server:
+- `Graceful shutdown initiated...`
+- `Shutdown complete`
+- `Application shutdown complete`
+
+Kết luận:
+- App xử lý shutdown có kiểm soát, không dừng đột ngột.
+
+---
+
+### Exercise 5.3 + 5.4: Stateless design + Load balancing (production)
+
+Thư mục thực hiện: `05-scaling-reliability/production`
+
+Đã chạy stack với scale 3 instances:
+```bash
+docker compose -p scaling5 up -d --build --scale agent=3
+docker compose -p scaling5 ps
+```
+
+Kết quả:
+- `scaling5-agent-1`: healthy
+- `scaling5-agent-2`: healthy
+- `scaling5-agent-3`: healthy
+- `scaling5-nginx-1`: chạy tại `localhost:8080`
+- `scaling5-redis-1`: healthy
+
+Test qua load balancer:
+```powershell
+curl.exe "http://localhost:8080/health"
+curl.exe --% -X POST http://localhost:8080/chat -H "Content-Type: application/json" -d "{\"question\":\"hello\"}"
+```
+
+Response mẫu:
+```json
+{"status":"ok","instance_id":"instance-f5a0c8","storage":"redis","redis_connected":true}
+{"session_id":"...","question":"hello","answer":"...","served_by":"instance-4c8ed3","storage":"redis"}
+```
+
+Nhận xét:
+- Nginx đã route request thành công đến các agent instances.
+- Ứng dụng dùng Redis để lưu session/state thay vì memory local.
+
+---
+
+### Exercise 5.5: Test stateless
+
+Đã chạy:
+```bash
+python test_stateless.py
+```
+
+Kết quả:
+- `Total requests: 5`
+- `Instances used: {'instance-f5a0c8', 'instance-202f77', 'instance-4c8ed3'}`
+- `All requests served despite different instances!`
+- `Total messages: 10`
+- `Session history preserved across all instances via Redis`
+
+Kết luận:
+- Stateless architecture hoạt động đúng: nhiều instance cùng xử lý request nhưng lịch sử hội thoại vẫn nhất quán nhờ Redis.
+
+---
+
+### Checkpoint 5
+
+- [x] Implement health và readiness checks.
+- [x] Implement graceful shutdown.
+- [x] Refactor/verify stateless design với Redis.
+- [x] Chạy load balancing với Nginx và 3 agent instances.
+- [x] Test stateless thành công bằng `test_stateless.py`.
