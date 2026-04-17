@@ -499,3 +499,44 @@ Kết luận:
 - [x] Refactor/verify stateless design với Redis.
 - [x] Chạy load balancing với Nginx và 3 agent instances.
 - [x] Test stateless thành công bằng `test_stateless.py`.
+
+## Screenshots Evidence (Relative Paths for GitHub)
+
+### Part 1
+- [Develop ask success](screenshots/part1/develop-ask-success.png)
+- [Production health and ready](screenshots/part1/production-health-ready.png)
+- [Production startup/shutdown log](screenshots/part1/production-startup-log.png)
+
+### Part 2
+- [Develop image size](screenshots/part2/develop-image-size.png)
+- [Advanced image size](screenshots/part2/advanced-image-size.png)
+- [Docker Compose services](screenshots/part2/compose-ps.png)
+- [Nginx health and ask](screenshots/part2/nginx-health-and-ask.png)
+
+### Part 3
+- [Railway domain and health](screenshots/part3/railway-domain-and-health.png)
+- [Railway ask success](screenshots/part3/railway-ask-success.png)
+- [Render blueprint status](screenshots/part3/render-blueprint-status.png)
+- [Render deploy error log](screenshots/part3/render-error-log.png)
+
+### Part 4
+- [API key missing 401](screenshots/part4/apikey-missing-401.png)
+- [API key invalid 403](screenshots/part4/apikey-invalid-403.png)
+- [API key valid 200](screenshots/part4/apikey-valid-200.png)
+- [JWT token issued](screenshots/part4/jwt-token-issued.png)
+- [JWT ask success](screenshots/part4/jwt-ask-success.png)
+- [Rate limit 429](screenshots/part4/rate-limit-429.png)
+- [Cost usage endpoint](screenshots/part4/cost-usage-endpoint.png)
+
+### Part 5
+- [Develop health and ready](screenshots/part5/develop-health-ready.png)
+- [Graceful shutdown log](screenshots/part5/graceful-shutdown-log.png)
+- [Scale 3 agents](screenshots/part5/production-scale-3agents.png)
+- [Load balancer health and chat](screenshots/part5/lb-health-chat-success.png)
+- [Stateless test pass](screenshots/part5/test-stateless-pass.png)
+
+### Part 6 / Final
+- [Public URL health](screenshots/part6/public-url-health.png)
+- [Public URL main endpoint](screenshots/part6/public-url-main-endpoint.png)
+- [Deployment dashboard](screenshots/part6/deployment-dashboard.png)
+- [Production ready check](screenshots/part6/check-production-ready-result.png)
